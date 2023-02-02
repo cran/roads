@@ -26,13 +26,8 @@
 #' @return Creates a plot using base graphics
 #' 
 #' @examples 
-#' # demo scenario 1
-#' scen <- demoScen[[1]]
 #' 
-#' # landing set 1 of scenario 1:
-#' land.pnts <- scen$landings.points.sf[scen$landings.points.sf$set==1,]
-#' 
-#' prRes <- projectRoads(land.pnts, scen$cost.rast, scen$road.line.sf, "lcp")
+#' prRes <- projectRoads(CLUSexample$landings, CLUSexample$cost, CLUSexample$roads)
 #' plotRoads(prRes, "Title")
 #' 
 #' @export
@@ -40,11 +35,10 @@
 plotRoads <- function(sim, mainTitle, 
                       subTitle = paste0("Method: ", sim$roadMethod), 
                       ...){
-  raster::plot(sim$costSurface, main = mainTitle, 
+  terra::plot(sim$costSurface, main = mainTitle, 
                sub = subTitle, ...)
-  if(is(sim$roads, "Raster")){
-    plot(raster::subs(sim$roads, data.frame(cur = c(0,1), 
-                                            new = c(NA, 1))), 
+  if(is(sim$roads, "SpatRaster")){
+    terra::plot(terra::subst(sim$roads, from = c(0,1), to = c(NA, 1)), 
          add = TRUE, col = "grey50", legend = FALSE)
   } else {
     

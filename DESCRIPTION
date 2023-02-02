@@ -1,10 +1,10 @@
 Package: roads
 Title: Road Network Projection
-Version: 1.0.0
+Version: 1.1.0
 Authors@R: 
     c(person(given = "Sarah",
            family = "Endicott", 
-           role = c("aut"), 
+           role = c("aut", "cre"), 
            email = "sarah.endicott@ec.gc.ca",
            comment = c(ORCID = "0000-0001-9644-5343")),
     person(given = "Kyle",
@@ -13,7 +13,7 @@ Authors@R:
            email = "Kyle.Lochhead@gov.bc.ca"),
     person(given = "Josie",
            family = "Hughes",
-           role = c("aut", "cre"),
+           role = c("aut"),
            email = "josie.hughes@ec.gc.ca"),
     person(given = "Patrick",
            family = "Kirby",
@@ -29,30 +29,30 @@ URL: https://github.com/LandSciTech/roads,
 Description: Project road network development based on an existing road 
     network, target locations to be connected by roads and a cost surface. Road 
     projection methods include minimum spanning tree with least cost path 
-    (Kruskal’s algorithm (1956) <doi:10.2307/2033241>), least cost path 
+    (Kruskal's algorithm (1956) <doi:10.2307/2033241>), least cost path 
     (Dijkstra's algorithm (1959) <doi:10.1007/BF01386390>) or snapping. 
     These road network projection methods are ideal for use with land cover
     change projection models.
 License: Apache License (>= 2)
 Encoding: UTF-8
 LazyData: true
-Imports: raster, dplyr, igraph, sp, data.table, SpaDES.tools, sf,
-        stars, units, rlang, methods, tidyselect
-RoxygenNote: 7.1.2
-Suggests: testthat (>= 2.1.0), knitr, rmarkdown, viridis
+Imports: raster, dplyr, igraph, sp, data.table, sf, units, rlang,
+        methods, tidyselect, terra
+RoxygenNote: 7.2.1
+Suggests: testthat (>= 2.1.0), knitr, rmarkdown, viridis, tmap, bench
 VignetteBuilder: knitr
 Depends: R (>= 2.10)
 Collate: 'CLUSexample.R' 'buildSimList.R' 'buildSnapRoads.R'
-        'demoScen.R' 'getClosestRoad.R' 'getGraph.R'
-        'getLandingsFromTarget.R' 'lcpList.R' 'mstList.R'
+        'demoScen.R' 'getClosestRoad.R' 'getDistFromSource.R'
+        'getGraph.R' 'getLandingsFromTarget.R' 'lcpList.R' 'mstList.R'
         'pathsToLines.R' 'projectRoads.R' 'rasterToLineSegments.R'
         'shortestPaths.R' 'plotRoads.R' 'rasterizeLine.R'
 BugReports: https://github.com/LandSciTech/roads/issues
 NeedsCompilation: no
-Packaged: 2022-06-20 16:30:48 UTC; HughesJo
-Author: Sarah Endicott [aut] (<https://orcid.org/0000-0001-9644-5343>),
+Packaged: 2023-02-01 17:18:51 UTC; EndicottS
+Author: Sarah Endicott [aut, cre] (<https://orcid.org/0000-0001-9644-5343>),
   Kyle Lochhead [aut],
-  Josie Hughes [aut, cre],
+  Josie Hughes [aut],
   Patrick Kirby [aut],
   Her Majesty the Queen in Right of Canada as represented by the Minister
     of the Environment [cph] (Copyright holder for included functions
@@ -61,6 +61,6 @@ Author: Sarah Endicott [aut] (<https://orcid.org/0000-0001-9644-5343>),
   Province of British Columbia [cph] (Copyright holder for included
     functions getGraph, lcpList, mstList, shortestPaths,
     getClosestRoad, buildSnapRoads)
-Maintainer: Josie Hughes <josie.hughes@ec.gc.ca>
+Maintainer: Sarah Endicott <sarah.endicott@ec.gc.ca>
 Repository: CRAN
-Date/Publication: 2022-06-22 07:40:07 UTC
+Date/Publication: 2023-02-02 16:10:02 UTC

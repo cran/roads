@@ -17,60 +17,95 @@
 
 #' Convert raster to lines
 #'
-#' Converts rasters that represent lines into an sf object. Raster is first
-#' converted to points and then lines are drawn between the nearest points.
-#' If there are two different ways to connect the points that have the same 
-#' distance both are kept which can cause doubled lines. USE WITH CAUTION.
+#' Converts rasters that represent lines into an sf object.
+#'
+#' For \code{method = "nearest"} raster is first converted to points and then
+#' lines are drawn between the nearest points. If there are two different ways
+#' to connect the points that have the same distance both are kept which can
+#' cause doubled lines. USE WITH CAUTION. \code{method = "mst"} converts the
+#' raster to points, reclassifies the raster so roads are 0 and other cells are
+#' 1 and then uses \code{projectRoads} to connect all the points with a minimum
+#' spanning tree. This will always connect all raster cells and is slower but
+#' will not double lines as often. Neither method is likely to work for very
+#' large rasters
 #'
 #' @param rast raster representing lines all values > 0 are assumed to be lines
+#' @param method method of building lines. See Details
 #'
 #' @return an sf simple feature collection
 #'
 #' @examples
-#' roadRast <- demoScen[[1]]$road.rast
-#' # Note this is imperfect because the line is doubled where the two roads
-#' # intersect
-#' roadLine <- rasterToLineSegments(roadRast)
+#' 
+#' # works well for very simple roads
+#' roadLine1 <- rasterToLineSegments(CLUSexample$roads)
+#' 
+#' # longer running more realistic examples
+#' \donttest{
+#' # mst method works well in this case
+#' roadLine2 <- rasterToLineSegments(demoScen[[1]]$road.rast)
+#' 
+#' # nearest method has doubled line where the two roads meet
+#' roadLine3 <- rasterToLineSegments(demoScen[[1]]$road.rast, method = "nearest")
+#' 
+#' # The mst method can also produce odd results in some cases
+#' rasterToLineSegments(demoScen[[4]]$road.rast)
+#' 
+#' }
 #'
 #' @export
 
-rasterToLineSegments <- function(rast){
-  #rast=roads
-  pts <- sf::st_as_sf(raster::rasterToPoints(rast,
-                                             fun = function(x){x > 0},
-                                             spatial = TRUE))
-  # finds line between all points and keep shortest
-  nearLn <- sf::st_nearest_points(pts, pts) %>%
-    sf::st_as_sf() %>%
-    mutate(len = sf::st_length(.data$x), ID = 1:n())
-
-  # speeds things up because filtering is slow on sf (as is [])
-  nearLn2 <- nearLn %>% sf::st_drop_geometry() %>%
-    filter(.data$len > 0) %>%
-    filter(.data$len == min(.data$len))
-
-  nearLn <- semi_join(nearLn, nearLn2, by = "ID")
-
-  # remove duplicate lines
-  coords <- sf::st_coordinates(nearLn) %>%
-    as.data.frame() %>%
-    group_by(.data$L1) %>%
-    slice(1)
-
-  nearLn2 <- nearLn %>% sf::st_drop_geometry() %>%
-    mutate(coordX = pull(coords, .data$X),
-           coordY = pull(coords, .data$Y)) %>%
-    group_by(.data$coordX, .data$coordY) %>%
-    slice(1:2)
-
-  nearLn <- semi_join(nearLn, nearLn2, by = "ID") %>%
-    sf::st_geometry() %>%
-    sf::st_union()
-  
-  nearLn <- sf::st_sf(geometry = nearLn)
-
-  return(nearLn)
-
+rasterToLineSegments <- function(rast, method = "mst"){
+  if(method == "mst"){
+    lnds <- raster::rasterToPoints(rast, fun = function(x){x > 0},
+                                   spatial = TRUE) %>%
+      sf::st_as_sf() %>% sf::st_set_agr("constant")
+    
+    cst <- rast == 0
+    
+    cst <- raster::reclassify(cst, matrix(c(0, 0.001, 1, 1), ncol = 2,
+                                          byrow = TRUE), right = NA)
+    
+    prRes <- projectRoads(landings = lnds, cst, roads = lnds[1,], roadsInCost = TRUE)
+    lines <- prRes$roads %>% sf::st_collection_extract("LINESTRING")
+    return(lines)
+    
+  } else if(method == "nearest"){
+    pts <- sf::st_as_sf(raster::rasterToPoints(rast,
+                                               fun = function(x){x > 0},
+                                               spatial = TRUE))
+    # finds line between all points and keep shortest
+    nearLn <- sf::st_nearest_points(pts, pts) %>%
+      sf::st_as_sf() %>%
+      mutate(len = sf::st_length(.data$x), ID = 1:n()) %>%
+      sf::st_set_agr("constant")
+    
+    # speeds things up because filtering is slow on sf (as is [])
+    nearLn2 <- nearLn %>% sf::st_drop_geometry() %>%
+      filter(.data$len > 0) %>%
+      filter(.data$len == min(.data$len))
+    
+    nearLn <- semi_join(nearLn, nearLn2, by = "ID")
+    
+    # remove duplicate lines
+    coords <- sf::st_coordinates(nearLn) %>%
+      as.data.frame() %>%
+      group_by(.data$L1) %>%
+      slice(1)
+    
+    nearLn2 <- nearLn %>% sf::st_drop_geometry() %>%
+      mutate(coordX = pull(coords, .data$X),
+             coordY = pull(coords, .data$Y)) %>%
+      group_by(.data$coordX, .data$coordY) %>%
+      slice(1:2)
+    
+    nearLn <- semi_join(nearLn, nearLn2, by = "ID") %>%
+      sf::st_geometry() %>%
+      sf::st_union()
+    
+    nearLn <- sf::st_sf(geometry = nearLn)
+    
+    return(nearLn)
+  }
 }
 
 # #' @import spdep
@@ -118,3 +153,5 @@ rasterToLineSegments <- function(rast){
 #   cLines=sp::SpatialLines(l,proj4string =raster::crs(cMap))
 #   return(cLines)
 # }
+
+

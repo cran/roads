@@ -29,7 +29,7 @@ getGraph<- function(sim, neighbourhood){
   sim$paths.v <- NULL
   # prepare the cost surface raster #===========
   # get cost as data.table from raster
-  weight <- data.table(weight = raster::getValues(sim$costSurface))
+  weight <- data.table(weight = terra::values(sim$costSurface, mat = FALSE))
 
   # get the id for ther verticies which is used to merge with the edge list from
   # adj
@@ -41,21 +41,12 @@ getGraph<- function(sim, neighbourhood){
     stop("neighbourhood type not recognized")
   }
 
-  nc <- raster::ncol(sim$costSurface)
-  ncel <- raster::ncell(sim$costSurface) %>% as.integer()
+  nc <- terra::ncol(sim$costSurface)
+  ncel <- terra::ncell(sim$costSurface) %>% as.integer()
 
-  edges <- SpaDES.tools::adj(
-      returnDT = TRUE,
-      numCol = nc,
-      numCell = ncel,
-      directions = 4,
-      cells = 1:as.integer(ncel)
-    )
-
-  if(!is(edges, "data.table")){
-    # adj will return matrix even if returnDT = TRUE if small
-    edges <- data.table::as.data.table(edges)
-  }
+  edges <- terra::adjacent(sim$costSurface, cells = 1:as.integer(ncel),
+                           directions = "rook", pairs = TRUE) %>% 
+    data.table::as.data.table()
 
   # switch to and from where to > from so can remove duplicates
   edges[edges$from < edges$to, ] <- edges[edges$from < edges$to, c('to','from')]
@@ -90,18 +81,9 @@ getGraph<- function(sim, neighbourhood){
     } else {mW = 1}
     weight[, weight := weight*mW]
 
-    edges <- SpaDES.tools::adj(
-      returnDT = TRUE,
-      numCol = nc,
-      numCell = ncel,
-      directions = "bishop",
-      cells = 1:as.integer(ncel)
-    )
-
-    if(!is(edges, "data.table")){
-      # adj will return matrix even if returnDT = TRUE if small
-      edges <- data.table::as.data.table(edges)
-    }
+    edges <- terra::adjacent(sim$costSurface, cells = 1:as.integer(ncel),
+                             directions = "bishop", pairs = TRUE) %>% 
+      data.table::as.data.table()
 
     # edges[from < to, c("from", "to") := .(to, from)]
     edges[edges$from < edges$to, ] <- edges[edges$from < edges$to, c('to','from')]

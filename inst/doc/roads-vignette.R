@@ -6,8 +6,9 @@ knitr::opts_chunk$set(
 
 ## ----setup, results='hide', warning=FALSE, message=FALSE----------------------
 library(roads)
-library(raster)
+library(terra)
 library(dplyr)
+library(raster)
 
 ## colours for displaying cost raster 
 if(requireNamespace("viridis", quietly = TRUE)){
@@ -21,14 +22,9 @@ if(requireNamespace("viridis", quietly = TRUE)){
 costRaster <- CLUSexample$cost
 
 ## ---- fig.show='hold'---------------------------------------------------------
-## existing roads network raster from the CLUSexample data-set
-existingRoadsRast <- roads::CLUSexample$roads
-
-# Note rasterToLineSegments only works for simple road networks
-# roadsLine <- roads::CLUSexample$roads %>% rasterToLineSegments()
-# Road must not be flat b/c weird issue in sf package #1730
+## existing roads network
 roadsLine <- sf::st_sfc(geometry = sf::st_linestring(
-  matrix(c(0.5, 4.5, 4.5, 4.51),
+  matrix(c(0.5, 4.5, 4.5, 4.5),
          ncol = 2, byrow = T) 
 )) %>%
   sf::st_as_sf()
@@ -80,6 +76,40 @@ text(x = 5.7, y = 4.8, labels = 'landing', adj = c(0, 0.4), xpd = TRUE)
 lines(x = c(5.3, 5.6), y = c(4.2, 4.2), lwd = 2, xpd = TRUE)
 text(x = 5.75, y = 4.2, labels = 'roads', adj = c(0, 0.3), xpd = TRUE)
 
+## ---- fig.show='hold', fig.width=5, fig.height=4.85---------------------------
+## project new roads using the 'DLCP' approach
+projRoads_dlcp <- roads::projectRoads(landings, 
+                                        costRaster, 
+                                        roadsLine, 
+                                        roadMethod = 'dlcp')
+
+## plot the cost raster and overlay it with new roads
+plot(costRaster, col = rastColours, main = "'DLCP' roads")
+plot(projRoads_dlcp$roads, add = TRUE)
+points(landings, pch = 19, col = 'red')  ## landings points
+## legend
+points(x = 5.5, y = 4.8, pch = 19, xpd = TRUE, col = 'red')
+text(x = 5.7, y = 4.8, labels = 'landing', adj = c(0, 0.4), xpd = TRUE)
+lines(x = c(5.3, 5.6), y = c(4.2, 4.2), lwd = 2, xpd = TRUE)
+text(x = 5.75, y = 4.2, labels = 'roads', adj = c(0, 0.3), xpd = TRUE)
+
+## ---- fig.show='hold', fig.width=5, fig.height=4.85---------------------------
+## project new roads using the 'DLCP' approach
+projRoads_dlcp2 <- roads::projectRoads(rev(landings), 
+                                        costRaster, 
+                                        roadsLine, 
+                                        roadMethod = 'dlcp')
+
+## plot the cost raster and overlay it with new roads
+plot(costRaster, col = rastColours, main = "'DLCP' roads")
+plot(projRoads_dlcp2$roads, add = TRUE)
+points(landings, pch = 19, col = 'red')  ## landings points
+## legend
+points(x = 5.5, y = 4.8, pch = 19, xpd = TRUE, col = 'red')
+text(x = 5.7, y = 4.8, labels = 'landing', adj = c(0, 0.4), xpd = TRUE)
+lines(x = c(5.3, 5.6), y = c(4.2, 4.2), lwd = 2, xpd = TRUE)
+text(x = 5.75, y = 4.2, labels = 'roads', adj = c(0, 0.3), xpd = TRUE)
+
 ## ---- fig.show='hold',  fig.width=5, fig.height=4.85--------------------------
 ## project new roads using the 'MST' approach
 projRoads_mst <- roads::projectRoads(landings, 
@@ -109,7 +139,7 @@ if(requireNamespace("viridis", quietly = TRUE)){
 ## scenario 
 scen <- demoScen[[1]]
 ## landing sets 1 to 4 of this scenario 
-land.pnts <- scen$landings.points[scen$landings.points$set%in%c(1:4),]
+land.pnts <- scen$landings.points[scen$landings.points$set %in% c(1:4),]
 ## plot the cost raster and landings
 par(mar=par('mar')/2)
 plot(scen$cost.rast, col = rastColours2, main = 'Cost and landings (by set)')
@@ -143,7 +173,7 @@ for (i in 1:4){
 
 ## ---- fig.show='hold', fig.width=5,fig.height=4.85----------------------------
 ## raster representing the union of completely independent simulations for multiple sets
-oneTime_sim <- raster::stack(oneTime_sim)
+oneTime_sim <- rast(oneTime_sim)
 independent <- any(oneTime_sim == 1)
 ## set non-road to NA for display purposes
 independent[!independent] <- NA 
