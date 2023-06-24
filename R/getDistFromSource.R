@@ -37,7 +37,8 @@
 #'   of the CRS.
 #' @param kwidth Integer, for the "pfocal" and "terra" methods the width of the
 #' moving window. For the "pfocal2" method the aggregation factor.
-# #' @param method Character, the method to use, one of "terra", "pfocal" or
+#' @param method Character, the method to use, currently only "terra" supported
+# #' one of "terra", "pfocal" or
 # #'   "pfocal2". See below for details.
 #'
 #' @return A SpatRaster
@@ -45,6 +46,7 @@
 #'
 #' @examples
 #' 
+#' CLUSexample <-  prepExData(CLUSexample)
 #' getDistFromSource(CLUSexample$roads, 5, 2)
 #' 
 #'\donttest{
@@ -53,12 +55,12 @@
 #' 
 #' #make example roads from scratch
 #' rds <- data.frame(x = 1:1000/100, y = cos(1:1000/100)) %>% 
-#'   sf::st_as_sf(coords = c("x", "y")) %>% 
-#'   sf::st_union() %>% 
-#'   sf::st_cast("LINESTRING")
+#'   st_as_sf(coords = c("x", "y")) %>% 
+#'   st_union() %>% 
+#'   st_cast("LINESTRING")
 #' 
-#' rds_rast <- terra::rasterize(terra::vect(rds), 
-#'                       terra::rast(nrows = 50, ncols = 50, 
+#' rds_rast <- rasterize(vect(rds), 
+#'                       rast(nrows = 50, ncols = 50, 
 #'                            xmin = 0, xmax = 10, 
 #'                            ymin = -5, ymax = 5),
 #'                       touches = TRUE)
@@ -66,10 +68,9 @@
 #' getDistFromSource(rds_rast, 5, 2)
 #'}
 
-getDistFromSource <- function(src, maxDist, kwidth = 3) {
+getDistFromSource <- function(src, maxDist, kwidth = 3, method = "terra") {
   # Not currently using this parameter but could in the future
   dissag = F
-  method = "terra"
   
   if(is(src, "Raster")){
     src <- terra::rast(src)
@@ -77,6 +78,11 @@ getDistFromSource <- function(src, maxDist, kwidth = 3) {
   if(method == "pfocal2"){
     stop("method pfocal2 is only available with the development version of roads.", 
          call. = FALSE)
+    # if(!rlang::is_installed("pfocal")){
+    #   stop("The pfocal2 method requires the pfocal package. ",
+    #        "It can be installed with remotes::install_github('LandSciTech/pfocal')",
+    #        call. = FALSE)
+    # }
     # src <- src > 0
     # 
     # # aggregate based on kwidth in a way that matches the moving window version
@@ -92,7 +98,7 @@ getDistFromSource <- function(src, maxDist, kwidth = 3) {
     # 
     # 
     # src2 <- terra::mask(src, src, maskvalues = 0, updatevalue = NA)
-    # dist_src <- pfocal::pfocal(terra::as.matrix(src2, wide = TRUE), kernel = kn, edge_value = NA, na.rm = TRUE, 
+    # dist_src <- pfocal::pfocal(terra::as.matrix(src2, wide = TRUE), kernel = kn, edge_value = NA, na.rm = TRUE,
     #                            reduce_function = "min")
     # dist_src <- terra::rast(src, vals = dist_src)
     # # min when all NA is Inf so need to convert to NA
@@ -126,6 +132,11 @@ getDistFromSource <- function(src, maxDist, kwidth = 3) {
     } else if(method == "pfocal"){
       stop("method pfocal is only available with the development version of roads.", 
            call. = FALSE)
+      # if(!rlang::is_installed("pfocal")){
+      #   stop("The pfocal method requires the pfocal package. ",
+      #        "It can be installed with remotes::install_github('LandSciTech/pfocal')",
+      #        call. = FALSE)
+      # }
       # ssO2 <- pfocal::pfocal(as.matrix(cPop, wide = TRUE), mm, reduce_function = "SUM",
       #                        transform_function = "MULTIPLY")
       # ssD2 <- cPop
