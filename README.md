@@ -5,14 +5,23 @@
 
 <!-- badges: start -->
 
-[![R-CMD-check](https://github.com/LandSciTech/roads/workflows/R-CMD-check/badge.svg)](https://github.com/LandSciTech/roads/actions)
 [![CRAN
 status](https://www.r-pkg.org/badges/version/roads)](https://CRAN.R-project.org/package=roads)
 [![R-CMD-check](https://github.com/LandSciTech/roads/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/LandSciTech/roads/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-The goal of roads is to simulate road development under resource
-development scenarios.
+The roads package offers iterative least cost path and minimum spanning
+tree methods for projecting forest road networks. The methods connect a
+set of target points to an existing road network using igraph
+<https://igraph.org> to identify least cost routes. The cost of
+constructing a road segment between adjacent pixels is determined by a
+user supplied `weightRaster` and a `weightFunction`; options include the
+average of adjacent `weightRaster` values, and a function of the
+elevation differences between adjacent cells that penalizes steep
+grades. These road network projection methods are intended for
+integration into R workflows and modelling frameworks used for
+forecasting forest change, and can be applied over multiple timesteps
+without rebuilding a graph at each timestep.
 
 ## Installation
 
@@ -34,39 +43,34 @@ devtools::install_github("LandSciTech/roads")
 ## Example
 
 To simulate the development of roads three inputs are needed: the
-current road network (roads), the locations that should be connected to
-the road network (landings) and the cost of building roads across the
-landscape (cost). Typically the roads and landings are `sf` objects or
-`sp` Spatial\* objects and the cost is a raster.
+current road network, the locations that should be connected to the road
+network (landings), and a weights raster that together with the
+weighting function determines the cost to connect two raster cells with
+a road. Typically the roads and landings are `sf` objects or `sp`
+Spatial\* objects and the weight is a raster.
 
 ``` r
 library(roads)
 library(raster)
-#> Warning: package 'sp' was built under R version 4.2.3
 
 # data set installed with roads package
 demoScen <- prepExData(demoScen)
 scen <- demoScen[[1]]
 
 prRoads <- projectRoads(landings = scen$landings.points, 
-                        cost = scen$cost.rast,
+                        weightRaster = scen$cost.rast,
                         roads = scen$road.line, 
                         plotRoads = TRUE) 
 ```
 
 <img src="man/figures/README-example-1.png" width="100%" />
 
-By default `projectRoads` uses a minimum spanning tree with least cost
-paths algorithm (`roadMethod = "mst"`) to connect all landings to the
-nearest existing road or other landing following the path with the
-lowest cost. Other methods available are least cost path
-(`roadMethod = "lcp"`) which connects each landing to the nearest road
-via the least cost path but independent of other landings and snapping
-(`roadMethod = "snap"`) which ignores both cost and other landings and
-simply connects each landing to the nearest road “as the crow flies”
+By default `projectRoads` uses an iterative least cost paths algorithm
+(`roadMethod = "ilcp"`) to connect each landing to the existing road by
+the lowest cost path, updating the cost after each landing is connected.
+A minimum spanning tree method (`roadMethod = "mst"`) is also available.
 
-For more details on how to use the package see the vignette
-`vignette("roads-vignette", package = "roads")`
+For more details see `vignette("roads-vignette", package = "roads")`
 
 # License
 

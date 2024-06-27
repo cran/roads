@@ -45,8 +45,9 @@ test_that("sf input polygons work for random", {
 })
 
 
-test_that("sp polygon input works for centroid",{
-  outCent <- getLandingsFromTarget(demoScen[[1]]$landings.poly)
+test_that("sf polygon input works for centroid",{
+  outCent <- getLandingsFromTarget(demoScen[[1]]$landings.poly %>%
+                                     sf::st_set_agr("constant"))
   expect_type(outCent, "list")
   
   if(interactive()){
@@ -100,21 +101,28 @@ test_that("raster with clumps input works no ID",{
 })
 
 test_that("raster with clumps input works with ID",{
-  rast <- demoScen[[1]]$landings.poly %>% terra::vect() %>%
-    terra::rasterize(terra::rast(demoScen[[1]]$cost.rast), field = "ID") %>% 
+  rst <- demoScen[[1]]$landings.poly %>% terra::vect() %>%
+    terra::rasterize(demoScen[[1]]$cost.rast, field = "ID") %>% 
     terra::`crs<-`(value = "EPSG:5070")
   
-  # make sure that a single celled havest block will work with clumps
-  rast[10,10] <- 6
+  # make sure that a single celled harvest block will work with clumps
+  rst[10,10] <- 20
   
-  # Show effect of ID
-  rast[78:88, 4:5] <- 7
+  # Show effect of ID and check for ID not sequential
+  rst[78:88, 4:5] <- 30
   
-  outRastCent <- getLandingsFromTarget(rast)
-  outRastRand <- getLandingsFromTarget(rast, landingDens = 0.1, 
+  rst[is.na(rst)] <- 0
+  
+  outRastCent <- getLandingsFromTarget(rst)
+  outRastRand <- getLandingsFromTarget(rst, landingDens = 0.1,
                                        sampleType = "random")
-  outRastReg <- getLandingsFromTarget(rast, landingDens = 0.1, 
+  outRastReg <- getLandingsFromTarget(rst, landingDens = 0.1,
                                       sampleType = "regular")
+  
+  land_vals <- terra::extract(rst, terra::vect(outRastCent), ID = FALSE) %>% pull(ID)
+  
+  # all unique raster values represented in landings
+  expect_length(setdiff(land_vals, terra::unique(rst) %>% pull(ID)), 0)
   
   expect_type(outRastCent, "list")
   
@@ -128,5 +136,26 @@ test_that("raster with clumps input works with ID",{
     terra::plot(rast)
     plot(outRastReg, col = "red", add = T)
   }
+  
+  # compare to supplying raster to projectRoads
+  prRastCent <- projectRoads(rst, demoScen[[1]]$cost.rast, demoScen[[1]]$road.line)
+  
+  expect_equal(prRastCent$landings, outRastCent)
+
 })
 
+test_that("Works with GEOMETRY input", {
+  lndPoly[6, 2] <- lndPoly[6, 2] %>% sf::st_cast("MULTIPOLYGON")
+  
+  outCent <- getLandingsFromTarget(lndPoly)
+  expect_type(outCent, "list")
+  
+  outRand <- getLandingsFromTarget(lndPoly, sampleType = "random",
+                                   landingDens = 0.00001)
+  expect_type(outRand, "list")
+  
+  
+  outReg <- getLandingsFromTarget(lndPoly, sampleType = "regular",
+                                   landingDens = 0.00001)
+  expect_type(outReg, "list")
+})

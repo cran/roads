@@ -16,8 +16,8 @@
 
 #' Faster rasterize for lines
 #'
-#' Rasterize a line using \code{stars} because \code{fasterize} doesn't work on lines and
-#' rasterize is slow. Deprecated use \code{terra::rasterize}
+#' Rasterize a line using `stars` because `fasterize` doesn't work on lines and
+#' rasterize is slow. Deprecated use `terra::rasterize`
 #'
 #' @param sfLine an sf object to be rasterized
 #' @param rast a raster to use as template for the output raster
@@ -38,6 +38,7 @@
 #' # Use terra::rasterize
 #' terra::rasterize(roadsLine, CLUSexample$cost, background = 0)
 #'
+#'@keywords internal
 rasterizeLine <- function(sfLine, rast, value){
   # rasterize roads to template
   .Deprecated("terra::rasterize")

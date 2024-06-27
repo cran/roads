@@ -7,19 +7,19 @@
 plotRoads(sim, mainTitle, subTitle = paste0("Method: ", sim$roadMethod), ...)
 }
 \arguments{
-\item{sim}{sim list result from \code{projectRoads}}
+\item{sim}{\code{sim} list result from \code{projectRoads}}
 
-\item{mainTitle}{A title for the plot}
+\item{mainTitle}{character. A title for the plot}
 
-\item{subTitle}{A sub title for the plot, by default the \code{roadMethod} is used}
+\item{subTitle}{character. A sub title for the plot, by default the \code{roadMethod} is used}
 
-\item{...}{Other arguments passed to raster plot call for the \code{costSurface}}
+\item{...}{Other arguments passed to raster plot call for the \code{weightRaster}}
 }
 \value{
 Creates a plot using base graphics
 }
 \description{
-Plot the results of \code{\link{projectRoads}}
+Plot the results of \code{\link[=projectRoads]{projectRoads()}}
 }
 \examples{
 CLUSexample <- prepExData(CLUSexample)

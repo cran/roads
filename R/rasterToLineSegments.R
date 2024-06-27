@@ -19,18 +19,19 @@
 #'
 #' Converts rasters that represent lines into an sf object.
 #'
-#' For \code{method = "nearest"} raster is first converted to points and then
+#' For `method = "nearest"` raster is first converted to points and then
 #' lines are drawn between the nearest points. If there are two different ways
 #' to connect the points that have the same distance both are kept which can
-#' cause doubled lines. USE WITH CAUTION. \code{method = "mst"} converts the
+#' cause doubled lines. USE WITH CAUTION. `method = "mst"` converts the
 #' raster to points, reclassifies the raster so roads are 0 and other cells are
-#' 1 and then uses \code{projectRoads} to connect all the points with a minimum
+#' 1 and then uses `projectRoads` to connect all the points with a minimum
 #' spanning tree. This will always connect all raster cells and is slower but
 #' will not double lines as often. Neither method is likely to work for very
 #' large rasters
 #'
-#' @param rast raster representing lines all values > 0 are assumed to be lines
-#' @param method method of building lines. See Details
+#' @param rast `SpatRaster`. Raster representing lines all values > 0 are assumed to be lines
+#' @param method character. Method of building lines. Options are `"mst"` (default) or `"nearest"`.
+#'  See Details below.
 #'
 #' @return an sf simple feature collection
 #'
@@ -66,7 +67,8 @@ rasterToLineSegments <- function(rast, method = "mst"){
     cst <- terra::classify(cst, matrix(c(0, 0.001, 1, 1), ncol = 2,
                                           byrow = TRUE), right = NA)
     
-    prRes <- projectRoads(landings = lnds, cst, roads = lnds[1,], roadsInCost = TRUE)
+    prRes <- projectRoads(landings = lnds, cst, roads = lnds[1,], roadMethod = "mst",
+                          roadsInWeight = TRUE)
     lines <- prRes$roads %>% sf::st_collection_extract("LINESTRING")
     return(lines)
     

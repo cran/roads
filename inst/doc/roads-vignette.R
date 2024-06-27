@@ -10,7 +10,7 @@ library(dplyr)
 library(sf)
 library(roads)
 
-## colours for displaying cost raster 
+## colours for displaying weight raster 
 if(requireNamespace("viridis", quietly = TRUE)){
   # Use colour blind friendly palette if available
   rastColours <- c('grey50', viridis::viridis(20))
@@ -22,116 +22,116 @@ if(requireNamespace("viridis", quietly = TRUE)){
 CLUSexample <- prepExData(CLUSexample)
 
 ## -----------------------------------------------------------------------------
-costRaster <- CLUSexample$cost
+weightRaster <- CLUSexample$cost
 
-## ---- fig.show='hold'---------------------------------------------------------
+## ----fig.show='hold'----------------------------------------------------------
 ## existing roads network
 roadsLine <- sf::st_sfc(geometry = sf::st_linestring(
   matrix(c(0.5, 4.5, 4.5, 4.5),
          ncol = 2, byrow = T) 
 )) %>%
-  sf::st_as_sf(crs = sf::st_crs(costRaster))
+  sf::st_as_sf(crs = sf::st_crs(weightRaster))
 
-## ---- fig.show='hold', fig.width=5, fig.height=4.85---------------------------
+## ----fig.show='hold', fig.width=6.5, fig.height=4.85--------------------------
 ## landings as spatial points
 landings <- roads::CLUSexample$landings
 
 ## plot example scenario
-plot(costRaster, col = rastColours, main = 'Example Scenario')
+par(omi = c(0,0,0,1.2))
+plot(weightRaster, col = rastColours, main = 'Example Scenario')
 plot(roadsLine, add = TRUE)
 plot(landings, add = TRUE, pch = 19)
-points(x=5.6,y=4.5,pch=19,xpd=TRUE)
-text(x=5.8,y=4.5,labels='landing',adj=c(0,0.4),xpd=TRUE)
-lines(x=c(5.3,5.6),y=c(4.2,4.2),lwd=2,xpd=TRUE)
-text(x=5.75,y=4.2,labels='roads',adj=c(0,0.3),xpd=TRUE)
+legend(x = 7.25, y = 5, legend = c("landings", "roads"), pch = c(19, NA), 
+       lwd = c(NA, 1),
+       xpd = NA, inset = -0.1, xjust = 1)
 
 
-## ---- fig.show='hold', fig.width=5, fig.height=4.85---------------------------
+## ----fig.show='hold', fig.width=6.5, fig.height=4.85--------------------------
 ## project new roads using the 'snap' approach
-projRoads_snap <- roads::projectRoads(landings, costRaster, roadsLine,
+projRoads_snap <- roads::projectRoads(landings, weightRaster, roadsLine,
                                       roadMethod = 'snap')
 
-## plot the cost raster, landings, and roads segments to the landings
-plot(costRaster, col = rastColours, main = "'Snapped' roads")
-points(landings, pch = 19, col = 'red')  
+par(omi = c(0,0,0,1.2))
+## plot the weight raster, landings, and roads segments to the landings
+plot(weightRaster, col = rastColours, main = "'Snapped' roads")
+points(landings, pch = 19)  
 plot(projRoads_snap$roads, add = TRUE) 
 
 ## update legend
-points(x = 5.5, y = 4.8, pch = 19, xpd = TRUE, col = 'red')
-text(x = 5.7, y = 4.8, labels = 'landing', adj = c(0, 0.4), xpd = TRUE)
-lines(x = c(5.3, 5.6), y = c(4.2, 4.2), lwd = 2, xpd = TRUE)
-text(x = 5.75, y = 4.2, labels = 'roads', adj = c(0, 0.3), xpd = TRUE)
+legend(x = 7.25, y = 5, legend = c("landings", "roads"), pch = c(19, NA), 
+       lwd = c(NA, 1),
+       xpd = NA, inset = -0.1, xjust = 1)
 
-## ---- fig.show='hold', fig.width=5, fig.height=4.85---------------------------
+## ----fig.show='hold', fig.width=6.5, fig.height=4.85--------------------------
 ## project new roads using the 'LCP' approach
 projRoads_lcp <- roads::projectRoads(landings, 
-                                        costRaster, 
+                                        weightRaster, 
                                         roadsLine, 
                                         roadMethod = 'lcp')
 
-## plot the cost raster and overlay it with new roads
-plot(costRaster, col = rastColours, main = "'LCP' roads")
+par(omi = c(0,0,0,1.2))
+## plot the weight raster and overlay it with new roads
+plot(weightRaster, col = rastColours, main = "'LCP' roads")
 plot(projRoads_lcp$roads, add = TRUE)
-points(landings, pch = 19, col = 'red')  ## landings points
+points(landings, pch = 19) 
 ## legend
-points(x = 5.5, y = 4.8, pch = 19, xpd = TRUE, col = 'red')
-text(x = 5.7, y = 4.8, labels = 'landing', adj = c(0, 0.4), xpd = TRUE)
-lines(x = c(5.3, 5.6), y = c(4.2, 4.2), lwd = 2, xpd = TRUE)
-text(x = 5.75, y = 4.2, labels = 'roads', adj = c(0, 0.3), xpd = TRUE)
+legend(x = 7.25, y = 5, legend = c("landings", "roads"), pch = c(19, NA), 
+       lwd = c(NA, 1),
+       xpd = NA, inset = -0.1, xjust = 1)
 
-## ---- fig.show='hold', fig.width=5, fig.height=4.85---------------------------
-## project new roads using the 'DLCP' approach
-projRoads_dlcp <- roads::projectRoads(landings, 
-                                        costRaster, 
+## ----fig.show='hold', fig.width=6.5, fig.height=4.85--------------------------
+## project new roads using the 'ILCP' approach
+projRoads_ilcp <- roads::projectRoads(landings, 
+                                        weightRaster, 
                                         roadsLine, 
-                                        roadMethod = 'dlcp')
+                                        roadMethod = 'ilcp')
 
-## plot the cost raster and overlay it with new roads
-plot(costRaster, col = rastColours, main = "'DLCP' roads")
-plot(projRoads_dlcp$roads, add = TRUE)
-points(landings, pch = 19, col = 'red')  ## landings points
+par(omi = c(0,0,0,1.2))
+## plot the weight raster and overlay it with new roads
+plot(weightRaster, col = rastColours, main = "'ILCP' roads")
+plot(projRoads_ilcp$roads, add = TRUE)
+points(landings, pch = 19)  ## landings points
 ## legend
-points(x = 5.5, y = 4.8, pch = 19, xpd = TRUE, col = 'red')
-text(x = 5.7, y = 4.8, labels = 'landing', adj = c(0, 0.4), xpd = TRUE)
-lines(x = c(5.3, 5.6), y = c(4.2, 4.2), lwd = 2, xpd = TRUE)
-text(x = 5.75, y = 4.2, labels = 'roads', adj = c(0, 0.3), xpd = TRUE)
+legend(x = 7.25, y = 5, legend = c("landings", "roads"), pch = c(19, NA), 
+       lwd = c(NA, 1),
+       xpd = NA, inset = -0.1, xjust = 1)
 
-## ---- fig.show='hold', fig.width=5, fig.height=4.85---------------------------
-## project new roads using the 'DLCP' approach
-projRoads_dlcp2 <- roads::projectRoads(rev(landings), 
-                                        costRaster, 
+## ----fig.show='hold', fig.width=6.5, fig.height=4.85--------------------------
+## project new roads using the 'ILCP' approach
+projRoads_ilcp2 <- roads::projectRoads(st_coordinates(landings)[4:1,], 
+                                        weightRaster, 
                                         roadsLine, 
-                                        roadMethod = 'dlcp')
+                                        roadMethod = 'ilcp')
 
-## plot the cost raster and overlay it with new roads
-plot(costRaster, col = rastColours, main = "'DLCP' roads")
-plot(projRoads_dlcp2$roads, add = TRUE)
-points(landings, pch = 19, col = 'red')  ## landings points
+par(omi = c(0,0,0,1.2))
+## plot the weight raster and overlay it with new roads
+plot(weightRaster, col = rastColours, main = "'ILCP' roads")
+plot(projRoads_ilcp2$roads, add = TRUE)
+points(landings, pch = 19)  ## landings points
 ## legend
-points(x = 5.5, y = 4.8, pch = 19, xpd = TRUE, col = 'red')
-text(x = 5.7, y = 4.8, labels = 'landing', adj = c(0, 0.4), xpd = TRUE)
-lines(x = c(5.3, 5.6), y = c(4.2, 4.2), lwd = 2, xpd = TRUE)
-text(x = 5.75, y = 4.2, labels = 'roads', adj = c(0, 0.3), xpd = TRUE)
+legend(x = 7.25, y = 5, legend = c("landings", "roads"), pch = c(19, NA), 
+       lwd = c(NA, 1),
+       xpd = NA, inset = -0.1, xjust = 1)
 
-## ---- fig.show='hold',  fig.width=5, fig.height=4.85--------------------------
+## ----fig.show='hold',  fig.width=6.5, fig.height=4.85-------------------------
 ## project new roads using the 'MST' approach
 projRoads_mst <- roads::projectRoads(landings, 
-                                        costRaster,
+                                        weightRaster,
                                         roadsLine, 
                                         roadMethod = 'mst')
 
-## plot the cost raster and overlay it with new roads
-plot(costRaster, col = rastColours, main = "'MST' roads")
+par(omi = c(0,0,0,1.2))
+## plot the weight raster and overlay it with new roads
+plot(weightRaster, col = rastColours, main = "'MST' roads")
 plot(projRoads_mst$roads, add = TRUE)
-points(landings, pch = 19, col = 'red')  ## landings points
+points(landings, pch = 19) 
 ## legend
-points(x = 5.5, y = 4.8, pch = 19, xpd = TRUE, col = 'red')
-text(x = 5.7, y = 4.8, labels = 'landing', adj = c(0, 0.4), xpd = TRUE)
-lines(x = c(5.3, 5.6), y = c(4.2, 4.2), lwd = 2, xpd = TRUE)
-text(x = 5.75, y = 4.2, labels = 'roads', adj = c(0, 0.3), xpd = TRUE)
+legend(x = 7.25, y = 5, legend = c("landings", "roads"), pch = c(19, NA), 
+       lwd = c(NA, 1),
+       xpd = NA, inset = -0.1, xjust = 1)
 
-## ---- fig.show='hold', fig.width=7,fig.height=6.5-----------------------------
-## colours for displaying cost raster
+## ----fig.show='hold', fig.width=7,fig.height=6.5------------------------------
+## colours for displaying weight raster
 if(requireNamespace("viridis", quietly = TRUE)){
   # Use colour blind friendly palette if available
   rastColours2 <- c('grey50', viridis::viridis(30))
@@ -144,14 +144,14 @@ demoScen <- prepExData(demoScen)
 scen <- demoScen[[1]]
 ## landing sets 1 to 4 of this scenario 
 land.pnts <- scen$landings.points[scen$landings.points$set %in% c(1:4),]
-## plot the cost raster and landings
+## plot the weight raster and landings
 par(mar=par('mar')/2)
 plot(scen$cost.rast, col = rastColours2, main = 'Cost and landings (by set)')
-plot(land.pnts, add = TRUE, pch = 21, cex = 2, bg = 'white')
+plot(land.pnts %>% st_geometry(), add = TRUE, pch = 21, cex = 2, bg = 'white')
 text(st_coordinates(land.pnts), labels = land.pnts$set, cex = 0.6, adj = c(0.5, 0.3),
      xpd = TRUE)
 
-## ---- fig.show='hold', fig.width=7,fig.height=6.86----------------------------
+## ----fig.show='hold', fig.width=7,fig.height=6.86-----------------------------
 ## project roads for landing sets 1 to 4, with independent one-time simulations
 oneTime_sim <- list() ## empty list 
 for (i in 1:4){
@@ -170,17 +170,17 @@ for (i in 1:4){
        main = paste0('Landings set ', i),
        legend = FALSE)
   plot(oneTime_sim[[i]], add = TRUE, col = "grey50", legend = FALSE)
-  plot(land.pnts[land.pnts$set == i, ], add = TRUE,
+  plot(st_geometry(land.pnts[land.pnts$set == i, ]), add = TRUE,
        pch = 21, cex = 1.5, bg = 'white')
 }
 
 
-## ---- fig.show='hold', fig.width=5,fig.height=4.85----------------------------
+## ----fig.show='hold', fig.width=5,fig.height=4.85-----------------------------
 ## raster representing the union of completely independent simulations for multiple sets
 oneTime_sim <- rast(oneTime_sim)
-independent <- any(oneTime_sim == 1)
+independent <- any(oneTime_sim, na.rm = TRUE)
 ## set non-road to NA for display purposes
-independent[!independent] <- NA 
+independent[!independent] <- NA
 
 ## plot 
 plot(scen$cost.rast, col = rastColours2,
@@ -189,9 +189,9 @@ plot(scen$cost.rast, col = rastColours2,
 
 plot(independent, col = 'grey30', add = TRUE, legend = FALSE)
 
-plot(land.pnts, add = TRUE, pch = 21, cex = 1.5, bg = 'white')
+plot(st_geometry(land.pnts), add = TRUE, pch = 21, cex = 1.5, bg = 'white')
 
-## ---- fig.show='hold', fig.width=7, fig.height=9.97---------------------------
+## ----fig.show='hold', fig.width=7, fig.height=9.97----------------------------
 ## continuing on with demo scenario 1
 ## landing sets 1 to 4 of this scenario as a raster stack
 land.stack <- scen$landings.stack[[1:4]]
@@ -215,14 +215,14 @@ par(mar = par('mar')/2)
   plot(scen$road.line, col = 'grey30', add = TRUE, legend = FALSE)
   
 for (i in 1:length(multiTime_sim)){
-  plot(multiTime_sim[[i]]$costSurface, col = rastColours2, 
+  plot(multiTime_sim[[i]]$weightRaster, col = rastColours2, 
        main = paste0('Roads at time t = ', i), legend = FALSE)
   plot(multiTime_sim[[i]]$roads, col = 'grey30', add = TRUE, legend = FALSE)
-  plot(land.pnts[land.pnts$set == i, ], add = TRUE, pch = 21, 
+  plot(st_geometry(land.pnts[land.pnts$set == i, ]), add = TRUE, pch = 21, 
          cex = 1.5, bg = 'white')
   if (i >= 2){
-    plot(land.pnts[land.pnts$set < i, ], add = TRUE, pch = 1, cex = 1.5)
-    plot(land.pnts[land.pnts$set == i, ], add = TRUE, pch = 21, 
+    plot(st_geometry(land.pnts[land.pnts$set < i, ]), add = TRUE, pch = 1, cex = 1.5)
+    plot(st_geometry(land.pnts[land.pnts$set == i, ]), add = TRUE, pch = 21, 
          cex = 1.5, bg = 'white')
   }
 }

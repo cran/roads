@@ -1,4 +1,4 @@
-## ---- include = FALSE---------------------------------------------------------
+## ----include = FALSE----------------------------------------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
@@ -25,12 +25,12 @@ scen <- demoScen[[1]]
 
 
 ## ----fig.width=6,fig.height=5-------------------------------------------------
-# make "real" roads by using dlcp method
+# make "real" roads by using ilcp method
 # use all landings and build roads to closest first
 land.pnts <- scen$landings.points[scen$landings.points$set %in% c(1:4),]
 
 realRoads <- projectRoads(land.pnts, scen$cost.rast, scen$road.line,
-                          roadMethod = "dlcp")
+                          roadMethod = "ilcp")
 
 plot(scen$cost.rast, col = rastColours, main = 'Scenario')
 plot(realRoads$roads, add = TRUE)
@@ -46,7 +46,7 @@ text(st_coordinates(land.pnts), labels = land.pnts$set, cex = 0.6, adj = c(0.5, 
 roadsRast <- terra::rasterize(terra::vect(realRoads$roads), scen$cost.rast, 
                               background = 0) == 0
 
-# doesn't work if cost is 0 because areas with 0 cost are assumed to already be
+# doesn't work if weight is 0 because areas with 0 weight are assumed to already be
 # roads so no new ones will be built
 scen$cost.rast <- scen$cost.rast * (roadsRast + 0.00001) 
 
